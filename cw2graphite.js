@@ -30,6 +30,14 @@ var start_time = dateFormat(then, "isoUtcDateTime");
 //     options["Period"] = '28800'
 // }
 
+// Pull carbonNameSpacePrefix from config; if it is not null, append a dot to the end.
+if(config.metricsConfig.carbonNameSpacePrefix) {
+    var carbonNameSpacePrefix = config.metricsConfig.carbonNameSpacePrefix;
+    carbonNameSpacePrefix += ".";
+} else {
+    var carbonNameSpacePrefix = "";
+}
+
 var metrics = config.metricsConfig.metrics;
 
 for (var index in metrics) {
@@ -49,11 +57,10 @@ function printMetric(metric, get_start_time, get_end_time) {
             console.error("on:\n" + JSON.stringify(getMetricStatistics_param, null, 2));
         }
         else {
-
             var dimension_prefix = "";
             for (var dim_index in getMetricStatistics_param.Dimensions) {
                 dimension_prefix += "." + getMetricStatistics_param.Dimensions[dim_index].Name;
-                dimension_prefix += "_" + getMetricStatistics_param.Dimensions[dim_index].Value;
+                dimension_prefix += "." + getMetricStatistics_param.Dimensions[dim_index].Value;
             }
 
             sorted_data = _.sortBy(data.Datapoints, function (n) {
@@ -62,7 +69,7 @@ function printMetric(metric, get_start_time, get_end_time) {
             for (var point in sorted_data) {
                 for (var stat_index in getMetricStatistics_param.Statistics) {
                     var statistic = getMetricStatistics_param.Statistics[stat_index];
-                    console.log("%s %s %s", getMetricStatistics_param.Namespace.replace("/", ".") + dimension_prefix + "." + getMetricStatistics_param.MetricName, sorted_data[point][statistic], parseInt(new Date(sorted_data[point].Timestamp).getTime() / 1000.0));
+                    console.log("%s %s %s", carbonNameSpacePrefix + getMetricStatistics_param.Namespace.replace("/", ".") + dimension_prefix + "." + getMetricStatistics_param.MetricName, sorted_data[point][statistic], parseInt(new Date(sorted_data[point].Timestamp).getTime() / 1000.0));
                 }
             }
         }
