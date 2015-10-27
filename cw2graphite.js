@@ -3,6 +3,9 @@ var config = require('./lib/readConfig.js').readCmdOptions();
 // Now using the official Amazon Web Services SDK for Javascript
 var AWS = require("aws-sdk");
 
+// Disable parameter validation, otherwise we can't specify the hack-aliases..
+AWS.config.paramValidation = false;
+
 // We'll use the Cloudwatch API
 var cloudwatch = new AWS.CloudWatch(config.awsCredentials);
 
@@ -60,7 +63,11 @@ function printMetric(metric, get_start_time, get_end_time) {
             var dimension_prefix = "";
             for (var dim_index in getMetricStatistics_param.Dimensions) {
                 dimension_prefix += "." + getMetricStatistics_param.Dimensions[dim_index].Name;
-                dimension_prefix += "." + getMetricStatistics_param.Dimensions[dim_index].Value;
+                if (getMetricStatistics_param.OutputAlias) {
+                    dimension_prefix += "." + getMetricStatistics_param.OutputAlias;
+                } else {
+                    dimension_prefix += "." + getMetricStatistics_param.Dimensions[dim_index].Value;
+                }
             }
 
             sorted_data = _.sortBy(data.Datapoints, function (n) {
